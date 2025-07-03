@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,user-scalable=no" />
+  <title>Shipment Tracker ERP</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="login-section">
+    <h2>Login</h2>
+    <input id="email" type="email" placeholder="Email" />
+    <input id="password" type="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div id="app" style="display:none;">
+    <h1>SUPER TEXTILE AGENCIES SHIPMENT TRACKER</h1>
+    <div class="tabs">
+      <button onclick="showTab('form')">Form</button>
+      <button onclick="showTab('entries')">View Entries</button>
+      <button onclick="showTab('charts')">Charts</button>
+    </div>
+
+    <div id="form-tab" class="tab">
+      <form id="shipmentForm">
+        <input name="factory" placeholder="Factory" required />
+        <input name="buyer" placeholder="Buyer" required />
+        <input name="po" placeholder="PO #" required />
+        <input name="date" type="date" required />
+        <input name="article" placeholder="Article" required />
+        <input name="container" placeholder="Container/Truck #" />
+        <input name="reqPcs" type="number" placeholder="Req Pcs" required />
+        <input name="reqCtn" type="number" placeholder="Req Ctn" required />
+        <input name="unit" placeholder="Unit" />
+        <input name="shipPcs" type="number" placeholder="Ship Pcs" required />
+        <input name="shipCtn" type="number" placeholder="Ship Ctn" required />
+        <input name="mode" placeholder="Mode" />
+        <input name="qc" placeholder="QC Name" />
+        <input name="remarks" placeholder="Remarks" />
+        <button type="submit">Save Shipment</button>
+      </form>
+    </div>
+
+    <div id="entries-tab" class="tab" style="display:none;">
+      <table id="entryTable">
+        <thead>
+          <tr>
+            <th>Factory</th><th>PO #</th><th>Ship Pcs</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div id="charts-tab" class="tab" style="display:none;">
+      <canvas id="shipmentChart"></canvas>
+    </div>
+  </div>
+
+  <script src="auth.js" defer></script>
+  <script src="app.js" defer></script>
+  <script src="chart.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f4f6f9;
+  margin:0;padding:20px;color:#333;
+}
+#login-section, .tabs, .tab, form {
+  max-width:400px;
+  margin: auto;
+}
+input, button {
+  display:block;
+  width:100%;
+  margin:10px 0;
+  padding:10px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+button {
+  background:#007bff;color:#fff;border:none;
+  cursor:pointer;
+}
+button:hover {
+  background:#0056b3;
+}
+.tabs {
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:20px;
+}
+.tabs button {
+  width:auto;
+}
+.tab {
+  display:none;
+}
+.tab.active {
+  display:block;
+}
+table {
+  width:90%;
+  margin:auto;
+  border-collapse:collapse;
+}
+th, td {
+  padding:10px;
+  border:1px solid #ddd;
+  text-align:center;
+}
+function login(){
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  if(email==='admin@test.com'&&password==='Test123!'){
+    document.getElementById('login-section').style.display='none';
+    document.getElementById('app').style.display='block';
+    showTab('form');
+  } else alert('Invalid credentials');
+}
+unction showTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(name+'-tab').classList.add('active');
+}
+
+const entries=[];
+document.getElementById('shipmentForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const f = e.target.factory.value;
+  const p = e.target.po.value;
+  const s = e.target.shipPcs.value;
+  entries.push({factory:f,po:p,ship:parseInt(s)});
+  addRow({factory:f,po:p,ship:s});
+  updateChart();
+});
+
+function addRow({factory,po,ship}){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td>${factory}</td><td>${po}</td><td>${ship}</td><td><button onclick="this.closest('tr').remove()">Delete</button></td>`;
+  document.querySelector('#entryTable tbody').append(tr);
+}
+let chart;
+function updateChart(){
+  const labels=entries.map(e=>e.po);
+  const data=entries.map(e=>e.ship);
+  const ctx=document.getElementById('shipmentChart').getContext('2d');
+  if(chart) chart.destroy();
+  chart=new Chart(ctx,{type:'bar',data:{labels, datasets:[{label:'Shipped Pcs',data,backgroundColor:'#007bff'}]}});
+}
